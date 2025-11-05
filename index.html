@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>쁠리 후원 랭킹</title>
+  <meta name="description" content="누적/참여율/회차별 메뉴, 순위 표시, SOOP 버튼, 총후원 세부보기">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="h1">쁠리 후원 랭킹 <span class="badge">GitHub Pages</span></div>
+      <div class="count-pill">표시 행: <span id="rowCount">0</span></div>
+    </div>
+
+    <div id="mainTabs"></div>
+    <div id="sessionTabs"></div>
+
+    <div class="card table-wrap">
+      <table>
+        <thead><tr></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="footer">
+      • <b>회차별목록</b>은 상단 회차 버튼을 <u>오래→최근 순</u>으로 6개 노출합니다.<br>
+      • <b>누적후원랭킹</b>에서는 총후원 옆 <b>□</b> 버튼으로 <u>회차별 후원개수</u>를 펼칠 수 있습니다.<br>
+      • 닉네임 옆 <b>SOOP</b> 버튼으로 방송국 새 탭 이동.
+    </div>
+  </div>
+  <script src="./script.js"></script>
+</body>
+</html>

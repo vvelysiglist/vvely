@@ -31,26 +31,23 @@ body {
 .badge { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 800; }
 .count-pill { font-size: 12px; color: var(--muted); margin-left: 8px; }
 
-.controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 10px; }
-.control-group { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--border); padding: 8px; border-radius: 12px; }
-
-input[type="search"], select, button, details {
-  padding: 10px 12px;
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: var(--text);
-  outline: none;
-}
-button.primary {
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  border: 0;
-  color: white;
-  font-weight: 800;
-}
-
-#rankTabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 12px; }
+#mainTabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 14px; }
 .tab {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+}
+.tab.active { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: 0; color: white; }
+
+#sessionTabs { display: none; gap: 6px; flex-wrap: wrap; margin: 6px 0 12px; }
+#sessionTabs.show { display: flex; }
+.session-tab {
   padding: 8px 12px;
   border: 1px solid var(--border);
   border-radius: 999px;
@@ -59,63 +56,24 @@ button.primary {
   cursor: pointer;
   font-weight: 700;
   font-size: 13px;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.03);
 }
-.tab.active { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: 0; color: white; }
+.session-tab.active { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border: 0; color: white; }
 
 .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(255, 133, 192, 0.15); }
 .table-wrap { width: 100%; overflow: auto; }
-
-table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 740px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 720px; }
 thead th { position: sticky; top: 0; background: var(--thead); border-bottom: 1px solid var(--border); text-align: left; padding: 12px; white-space: nowrap; cursor: pointer; user-select: none; }
 thead th .sort { font-size: 11px; color: var(--muted); margin-left: 6px; }
 tbody td { border-bottom: 1px solid #ffe9f2; padding: 10px 12px; white-space: nowrap; }
 tbody tr:hover { background: var(--hover); }
 
-a.nick-link {
-  color: var(--link);
-  font-weight: 700;
-  text-decoration: none;
-}
+a.nick-link { color: var(--link); font-weight: 700; text-decoration: none; }
 a.nick-link:hover { text-decoration: underline; }
-
-/* Expander */
-th.expander, td.expander { width: 34px; text-align: center; white-space: nowrap; }
-.btn-expander {
-  border: 1px solid var(--border);
-  background: #fff;
-  border-radius: 8px;
-  width: 26px; height: 26px;
-  font-weight: 800;
-  cursor: pointer;
-}
-.btn-expander:focus { outline: 2px solid #ffc2dc; }
-
-/* Details row */
-.details-row td {
-  background: #fff7fb;
-  border-top: 1px dashed #ffd6e8;
-  border-bottom: 1px solid #ffe9f2;
-  padding: 12px;
-}
-.detail-item { margin: 6px 12px 6px 0; display: inline-flex; gap: 6px; align-items: baseline; }
-.detail-key { font-weight: 700; color: #9c5575; }
-.detail-val { color: #3b1a28; }
 
 .footer { color: var(--muted); font-size: 12px; margin-top: 10px; }
 
-.columns-panel { position: relative; }
-.columns-panel summary { list-style: none; cursor: pointer; }
-.columns-menu {
-  position: absolute; z-index: 10; top: 40px; left: 0; width: 280px; max-height: 320px; overflow: auto;
-  background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-}
-.columns-menu label { display: flex; align-items: center; gap: 10px; padding: 6px 4px; }
-
 @media (max-width: 640px) {
   .h1 { font-size: 22px; }
-  table { font-size: 13px; min-width: 620px; }
+  table { font-size: 13px; min-width: 600px; }
   .controls { gap: 6px; }
-  .control-group { padding: 6px; }
-  input[type="search"] { width: 180px; }
 }

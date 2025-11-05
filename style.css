@@ -74,3 +74,14 @@ th.rate,td.rate{width:16%}
   .container{max-width:100%}
   table{font-size:12px}
 }
+
+/* 모바일 최적화: 버튼 안 잘리게 */
+@media (max-width: 480px){
+  th.rank,td.rank{width:10%}
+  th.nick,td.nick{width:40%}
+  th.val,td.val{width:18%}
+  th.cnt,td.cnt{width:16%}
+  th.rate,td.rate{width:16%}
+  .expand-btn{transform:scale(.9);margin-left:4px}
+  thead th,tbody td{padding:6px 8px}
+}

@@ -20,6 +20,15 @@ const PRESETS = [
   { id: "amount",label: "금액",     key: findCol(["금액","후원금액","총액","amount"]) },
 ];
 
+// Columns considered "details" (hidden from main row, shown when expanded)
+const DETAIL_NAME_HINTS = ["회차","내역","요약","메모","설명"];
+const DETAIL_COLS = COLUMNS.filter(c => DETAIL_NAME_HINTS.some(h => c.includes(h)));
+
+// Build list of "visible" columns initially (exclude detail cols)
+function visibleColumns() {
+  return COLUMNS.filter(c => !hiddenCols.has(c) && !DETAIL_COLS.includes(c));
+}
+
 function fmtNumber(x) {
   if (x === null || x === undefined || x === "") return "";
   if (typeof x === "number") return x.toLocaleString();
@@ -50,7 +59,7 @@ function setActiveTab(key) {
 
 function applyPreset(key) {
   currentSort.key = key;
-  currentSort.asc = false; // 큰순
+  currentSort.asc = false;
   setActiveTab(key);
   applyFilters();
 }
@@ -58,8 +67,13 @@ function applyPreset(key) {
 function buildHeader() {
   const thead = document.querySelector("thead tr");
   thead.innerHTML = "";
-  COLUMNS.forEach((col) => {
-    if (hiddenCols.has(col)) return;
+  // Expander column header
+  const exp = document.createElement("th");
+  exp.className = "expander";
+  exp.textContent = "";
+  thead.appendChild(exp);
+
+  visibleColumns().forEach((col) => {
     const th = document.createElement("th");
     const span = document.createElement("span");
     span.textContent = col;
@@ -86,17 +100,87 @@ function updateHeaderSortIcons() {
 function render(rows) {
   const tbody = document.querySelector("tbody");
   tbody.innerHTML = "";
-  rows.forEach((row) => {
+  rows.forEach((row, idx) => {
     const tr = document.createElement("tr");
-    COLUMNS.forEach((col) => {
-      if (hiddenCols.has(col)) return;
+
+    // Expander cell
+    const tdExp = document.createElement("td");
+    tdExp.className = "expander";
+    const btn = document.createElement("button");
+    btn.className = "btn-expander";
+    btn.setAttribute("aria-expanded", "false");
+    btn.textContent = "▸";
+    btn.addEventListener("click", () => toggleDetails(tr, row, btn));
+    tdExp.appendChild(btn);
+    tr.appendChild(tdExp);
+
+    visibleColumns().forEach((col) => {
       const td = document.createElement("td");
-      td.textContent = fmtNumber(row[col]);
+      const val = row[col];
+      const asText = String(val ?? "");
+      // Truncate long inline values for compactness
+      if (asText.length > 28) {
+        td.title = asText;
+        td.textContent = asText.slice(0, 28) + "…";
+      } else {
+        td.textContent = fmtNumber(val);
+      }
       tr.appendChild(td);
     });
     tbody.appendChild(tr);
   });
   document.getElementById("rowCount").textContent = rows.length.toLocaleString();
+}
+
+function buildDetailsContent(row) {
+  const wrap = document.createElement("div");
+  const picks = [];
+  // 1) Add detail columns by name hints
+  DETAIL_COLS.forEach(c => { if (row[c]) picks.push([c, row[c]]); });
+  // 2) Add any very long field (fallback)
+  COLUMNS.forEach(c => {
+    const text = String(row[c] ?? "");
+    if (!DETAIL_COLS.includes(c) && text.length > 40) picks.push([c, text]);
+  });
+  // Unique by column
+  const seen = new Set(); const unique = [];
+  picks.forEach(([k,v]) => { if (!seen.has(k)) { seen.add(k); unique.append([k,v]); } })
+  unique.forEach(([k,v]) => {
+    const item = document.createElement("div");
+    item.className = "detail-item";
+    const key = document.createElement("div"); key.className = "detail-key"; key.textContent = k + ":";
+    const val = document.createElement("div"); val.className = "detail-val"; val.textContent = v;
+    item.appendChild(key); item.appendChild(val);
+    wrap.appendChild(item);
+  });
+  if (unique.length === 0) {
+    const none = document.createElement("div");
+    none.textContent = "추가 세부정보가 없습니다.";
+    wrap.appendChild(none);
+  }
+  return wrap;
+}
+
+function toggleDetails(tr, row, btn) {
+  const expanded = btn.getAttribute("aria-expanded") === "true";
+  if (expanded) {
+    // Collapse: remove next .details-row if present
+    const next = tr.nextElementSibling;
+    if (next && next.classList.contains("details-row")) next.remove();
+    btn.setAttribute("aria-expanded","false");
+    btn.textContent = "▸";
+  } else {
+    // Expand: insert a new row after
+    const detailsTr = document.createElement("tr");
+    detailsTr.className = "details-row";
+    const td = document.createElement("td");
+    td.colSpan = 1 + visibleColumns().length;
+    td.appendChild(buildDetailsContent(row));
+    detailsTr.appendChild(td);
+    tr.after(detailsTr);
+    btn.setAttribute("aria-expanded","true");
+    btn.textContent = "▾";
+  }
 }
 
 function sortBy(key) {
@@ -137,6 +221,8 @@ function applyFilters() {
 function buildColumnsPanel() {
   const list = document.getElementById("columnsList");
   list.innerHTML = "";
+  // Hide detail columns by default in the main view
+  DETAIL_COLS.forEach(c => hiddenCols.add(c));
   COLUMNS.forEach(col => {
     const label = document.createElement("label");
     const checkbox = document.createElement("input");
@@ -170,14 +256,25 @@ function init() {
   } else { sheetSelect.style.display = "none"; }
 
   // Tabs
-  buildTabs();
+  const tabsWrap = document.getElementById("rankTabs");
+  tabsWrap.innerHTML = "";
+  PRESETS.forEach(p => {
+    if (!p.key) return;
+    const btn = document.createElement("button");
+    btn.className = "tab";
+    btn.textContent = p.label + "순";
+    btn.dataset.key = p.key;
+    btn.addEventListener("click", () => applyPreset(p.key));
+    tabsWrap.appendChild(btn);
+  });
+  const first = tabsWrap.querySelector(".tab");
+  if (first) first.classList.add("active");
 
-  // Columns panel
+  // Columns menu (hide "detail-like" columns by default)
   buildColumnsPanel();
 
-  // Default: first preset if exists
-  const firstTab = document.querySelector("#rankTabs .tab");
-  if (firstTab) { applyPreset(firstTab.dataset.key); }
+  // Default sort: first preset if exists
+  if (first) { applyPreset(first.dataset.key); }
   else {
     currentSort.key = findCol(["총후원개수","후원개수","총개수","count","sum"]) || COLUMNS[0];
     currentSort.asc = false;

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>쁠리 후원 랭킹</title>
-  <meta name="description" content="쁠리 후원 랭킹 뷰어 (GitHub Pages용)">
+  <meta name="description" content="카테고리 탭(총후원/참여율/금액)으로 순위를 볼 수 있는 핑크 테마 뷰어">
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
@@ -22,17 +22,6 @@
         </select>
       </div>
 
-      <div class="control-group">
-        <label for="themeSel" style="color:var(--muted);font-size:12px;">테마</label>
-        <select id="themeSel" title="색 테마">
-          <option value="">보라(기본)</option>
-          <option value="mint">민트</option>
-          <option value="pink">핑크</option>
-          <option value="gold">골드</option>
-          <option value="blue">블루</option>
-        </select>
-      </div>
-
       <div class="control-group columns-panel">
         <details>
           <summary>표시 컬럼 선택</summary>
@@ -43,6 +32,8 @@
       <button class="primary" onclick="window.location.reload()">새로고침</button>
     </div>
 
+    <div id="rankTabs"></div>
+
     <div class="card table-wrap">
       <table>
         <thead><tr></tr></thead>
@@ -51,8 +42,7 @@
     </div>
 
     <div class="footer">
-      헤더를 클릭하면 정렬됩니다. 검색/시트/컬럼 필터로 빠르게 찾아보세요.<br>
-      모바일에서도 가로 스크롤이 가능하도록 최적화되어 있습니다.
+      탭을 눌러 **총후원/참여율/금액** 기준으로 순위를 전환할 수 있습니다. 헤더 클릭으로 세부 정렬도 가능합니다.
     </div>
   </div>
   <script src="./script.js"></script>

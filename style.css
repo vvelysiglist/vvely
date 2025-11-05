@@ -1,0 +1,92 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;800&display=swap');
+
+:root{
+  --bg1:#fff7fb; --bg2:#ffe9f3; --bg3:#ffe3f0;
+  --card:#ffffff; --text:#2b0d1a; --muted:#7b5163;
+  --accent:#ff5fa2; --accent-2:#ff85c0;
+  --border:#ffd1e3; --hover:#fff5f9; --thead:#ffe3ef;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:"Noto Sans KR",ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+  background:
+    radial-gradient(1200px 800px at 20% -10%, rgba(255,133,192,.22), transparent 60%),
+    radial-gradient(1000px 700px at 120% 10%, rgba(255,95,162,.18), transparent 55%),
+    linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 55%, var(--bg3) 100%);
+  background-attachment: fixed, fixed, fixed;
+  color:var(--text);
+}
+
+.container{max-width:clamp(720px, 80vw, 820px); margin:16px auto 22px; padding:0 12px}
+
+.header{display:flex;align-items:center;gap:8px 10px;margin-bottom:8px}
+.h1{font-size:20px;font-weight:800;letter-spacing:-.02em;display:inline-flex;align-items:center;gap:8px}
+.badge{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;border-radius:999px;padding:2px 8px;font-size:10.5px;font-weight:800}
+.count-pill{font-size:11px;color:var(--muted);margin-left:6px}
+
+#mainTabs{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 10px}
+.tab{padding:7px 11px;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--text);cursor:pointer;font-weight:800;font-size:12.5px;box-shadow:0 1px 0 rgba(0,0,0,.03)}
+.tab.active{background:linear-gradient(135deg,var(--accent),var(--accent-2));border:0;color:#fff}
+
+#sessionTabs{display:none;gap:6px;flex-wrap:wrap;margin:6px 0 8px}
+#sessionTabs.show{display:flex}
+.session-tab{padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:#fff;color:var(--text);cursor:pointer;font-weight:700;font-size:12px}
+.session-tab.active{background:linear-gradient(135deg,var(--accent),var(--accent-2));border:0;color:#fff}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 10px 24px rgba(255,133,192,.12)}
+.table-wrap{width:100%;overflow:auto}
+
+/* FILL-WIDTH TABLE: 100% width + fractional columns */
+table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+thead th{position:sticky;top:0;background:var(--thead);border-bottom:1px solid var(--border);text-align:center;padding:8px 10px;white-space:nowrap;user-select:none}
+tbody td{border-bottom:1px solid #ffe9f2;padding:8px 10px;white-space:nowrap;text-align:center}
+tbody tr:hover{background:var(--hover)}
+
+/* Column widths (fractions) */
+th.rank,td.rank{width:8%}
+th.nick,td.nick{width:44%; text-align:left} /* nickname left, others centered */
+th.val,td.val{width:16%}
+th.cnt,td.cnt{width:16%}
+th.rate,td.rate{width:16%}
+
+/* nickname cell */
+.nick-wrap{display:inline-flex;align-items:center;gap:4px}
+.nick-text{white-space:nowrap;overflow:visible;text-overflow:unset;flex:0 0 auto}
+.soop-logo{width:16px;height:auto;flex:0 0 auto;cursor:pointer;transition:opacity .15s}
+.soop-logo:hover{opacity:.85}
+
+/* chevron */
+.expand-btn{display:inline-flex;align-items:center;justify-content:center;margin-left:6px;width:18px;height:18px;border-radius:999px;border:0;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;cursor:pointer;font-weight:900;font-size:10px;box-shadow:0 3px 8px rgba(255,133,192,.22)}
+
+.details-row td{background:#fff7fb;border-top:1px dashed #ffd6e8;border-bottom:1px solid #ffe9f2;padding:8px;text-align:left}
+.detail-list{display:flex;flex-wrap:wrap;gap:6px 12px}
+.detail-item{display:inline-flex;gap:6px;align-items:baseline}
+.detail-key{font-weight:700;color:#9c5575}
+.detail-val{color:#3b1a28}
+
+.footer{color:var(--muted);font-size:11px;margin-top:8px}
+
+@media (max-width:640px){
+  .container{max-width:100%}
+  table{font-size:12px}
+}
+
+/* 모바일 최적화: 버튼 안 잘리게 */
+@media (max-width: 480px){
+  /* 열 비율 재배분 (총 100%) */
+  th.rank,td.rank{width:10%}
+  th.nick,td.nick{width:40%}   /* 닉 조금만 줄임 */
+  th.val,td.val{width:18%}     /* 총후원에 여유 더 줌 (버튼 포함) */
+  th.cnt,td.cnt{width:16%}
+  th.rate,td.rate{width:16%}
+
+  /* 버튼 살짝 축소 + 여백 조정 */
+  .expand-btn{transform:scale(.9); margin-left:4px}
+
+  /* 패딩도 살짝 줄여서 여유 확보 */
+  thead th, tbody td{padding:6px 8px}
+}

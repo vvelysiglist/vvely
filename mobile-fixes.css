@@ -20,10 +20,10 @@
   .id { color: #777; }
 
   /* Typical ranking grid columns (fallback) */
-.row {
-    grid-template-columns: 42px minmax(130px, 1fr) minmax(85px, 0.8fr) minmax(75px, 0.7fr) minmax(65px, 0.7fr) 32px !important;
+  .row {
+    grid-template-columns: 42px minmax(140px,1fr) 110px 86px 70px 34px !important;
+    align-items: center;
   }
-}
 
   /* Numbers: keep single-line and aligned */
   .num, .cnt, .ratio {
@@ -49,4 +49,110 @@
 
   /* Ensure grid/flex children can shrink */
   [class*="row"] > *, [class*="grid"] > *, [class*="flex"] > * { min-width: 0; }
+}
+
+/* --- SOOP 아이콘 겹침 방지 패치 --- */
+@media (max-width: 720px){
+
+  /* row가 flex든 grid든 안전하게 동작하도록 가드 */
+  .row { 
+    display: grid !important;
+    grid-template-columns: 42px minmax(140px,1fr) minmax(96px,0.8fr) minmax(82px,0.7fr) minmax(70px,0.7fr) 32px !important;
+    gap: 6px !important;
+    align-items: center;
+  }
+
+  /* 모든 칸이 칼럼 경계 밖으로 못 새어나가게 */
+  .row > * { min-width: 0 !important; overflow: hidden !important; }
+
+  /* 긴 닉네임/아이디는 일찍 말줄임 */
+  .row .name { 
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+    overflow: hidden !important;
+    min-width: 0 !important;
+    padding-right: 2px;
+  }
+
+  /* 숫자 칼럼: 줄바꿈 금지 + 넘치면 숨김(옆 칼럼 침범 방지) */
+  .row .num, .row .cnt, .row .ratio {
+    white-space: nowrap !important;
+    text-align: right !important;
+    font-variant-numeric: tabular-nums;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* SOOP 아이콘: 고정폭 & 축소 금지 (겹침 방지 핵심) */
+  .row .soop {
+    width: 28px !important;
+    height: 28px !important;
+    flex: 0 0 28px !important;   /* flex일 때 가드 */
+    justify-self: end;           /* grid일 때 오른쪽 정렬 */
+  }
+  .row .soop img, .row .soop svg { 
+    width: 18px !important; 
+    height: 18px !important; 
+    display: block; 
+  }
+}
+
+/* 초소형 화면(≤360px) 안전 여유 */
+@media (max-width: 360px){
+  .row { 
+    grid-template-columns: 38px minmax(120px,1fr) minmax(90px,0.9fr) minmax(76px,0.8fr) minmax(64px,0.8fr) 30px !important;
+  }
+}
+
+/* --- SOOP 아이콘 겹침 방지 패치 --- */
+@media (max-width: 720px){
+
+  /* row가 flex든 grid든 안전하게 동작하도록 가드 */
+  .row { 
+    display: grid !important;
+    grid-template-columns: 42px minmax(140px,1fr) minmax(96px,0.8fr) minmax(82px,0.7fr) minmax(70px,0.7fr) 32px !important;
+    gap: 6px !important;
+    align-items: center;
+  }
+
+  /* 모든 칸이 칼럼 경계 밖으로 못 새어나가게 */
+  .row > * { min-width: 0 !important; overflow: hidden !important; }
+
+  /* 긴 닉네임/아이디는 일찍 말줄임 */
+  .row .name { 
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+    overflow: hidden !important;
+    min-width: 0 !important;
+    padding-right: 2px;
+  }
+
+  /* 숫자 칼럼: 줄바꿈 금지 + 넘치면 숨김(옆 칼럼 침범 방지) */
+  .row .num, .row .cnt, .row .ratio {
+    white-space: nowrap !important;
+    text-align: right !important;
+    font-variant-numeric: tabular-nums;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* SOOP 아이콘: 고정폭 & 축소 금지 (겹침 방지 핵심) */
+  .row .soop {
+    width: 28px !important;
+    height: 28px !important;
+    flex: 0 0 28px !important;   /* flex일 때 가드 */
+    justify-self: end;           /* grid일 때 오른쪽 정렬 */
+  }
+  .row .soop img, .row .soop svg { 
+    width: 18px !important; 
+    height: 18px !important; 
+    display: block; 
+  }
+}
+
+/* 초소형 화면(≤360px) 안전 여유 */
+@media (max-width: 360px){
+  .row { 
+    grid-template-columns: 38px minmax(120px,1fr) minmax(90px,0.9fr) minmax(76px,0.8fr) minmax(64px,0.8fr) 30px !important;
+  }
 }

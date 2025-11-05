@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>쁠리 후원 랭킹</title>
+  <meta name="description" content="누적후원/참여율/회차별 목록으로 보는 핑크 테마 뷰어">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="h1">쁠리 후원 랭킹 <span class="badge">GitHub Pages</span></div>
+      <div class="count-pill">표시 행: <span id="rowCount">0</span></div>
+    </div>
+
+    <div id="mainTabs"></div>
+    <div id="sessionTabs"></div>
+
+    <div class="card table-wrap">
+      <table>
+        <thead><tr></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="footer">
+      <b>메뉴</b>: 누적후원랭킹 / 참여율랭킹 / 회차별목록<br>
+      회차별목록에서 회차 버튼을 누르면 해당 회차의 후원 개수 순으로 정렬됩니다.<br>
+      닉네임을 클릭하면 SOOP 방송국으로 이동합니다.
+    </div>
+  </div>
+  <script src="./script.js"></script>
+</body>
+</html>

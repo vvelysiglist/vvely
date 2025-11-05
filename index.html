@@ -1,31 +1,40 @@
 <!DOCTYPE html>
-
 <html lang="ko">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>쁠리 후원 랭킹</title>
-<meta content="누적/참여율/회차별, 닉네임(아이디), SOOP 바로가기, 풀폭+중앙정렬" name="description"/>
-<link href="./style.css" rel="stylesheet"/>
-<link href="../mobile-fixes.css" media="(max-width: 720px)" rel="stylesheet"/></head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>쁠리 후원 랭킹</title>
+  <meta name="description" content="누적/참여율/회차별, 닉네임(아이디), SOOP 바로가기, 풀폭+중앙정렬" />
+
+  <!-- 기본 스타일 -->
+  <link rel="stylesheet" href="./style.css" />
+
+  <!-- 모바일 최적화용 CSS (720px 이하일 때만 작동) -->
+  <link rel="stylesheet" href="./mobile-fixes.css?v=2" media="(max-width: 720px)" />
+</head>
+
 <body>
-<div class="container">
-<div class="header">
-<div class="h1">쁠리 후원 랭킹 <span class="badge">GitHub Pages</span></div>
-<div class="count-pill">표시 행: <span id="rowCount">0</span></div>
-</div>
-<div id="mainTabs"></div>
-<div id="sessionTabs"></div>
-<div class="card table-wrap">
-<table>
-<thead><tr></tr></thead>
-<tbody></tbody>
-</table>
-</div>
-<div class="footer">
+  <div class="container">
+    <div class="header">
+      <div class="h1">쁠리 후원 랭킹 <span class="badge">GitHub Pages</span></div>
+      <div class="count-pill">표시 행: <span id="rowCount">0</span></div>
+    </div>
+
+    <div id="mainTabs"></div>
+    <div id="sessionTabs"></div>
+
+    <div class="card table-wrap">
+      <table>
+        <thead><tr></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="footer">
       • 쁠플단 감사합니다♥️
     </div>
-</div>
-<script src="./script.js"></script>
+  </div>
+
+  <script src="./script.js"></script>
 </body>
 </html>

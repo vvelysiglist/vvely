@@ -20,10 +20,10 @@
   .id { color: #777; }
 
   /* Typical ranking grid columns (fallback) */
-  .row {
-    grid-template-columns: 42px minmax(140px,1fr) 110px 86px 70px 34px !important;
-    align-items: center;
+.row {
+    grid-template-columns: 42px minmax(130px, 1fr) minmax(85px, 0.8fr) minmax(75px, 0.7fr) minmax(65px, 0.7fr) 32px !important;
   }
+}
 
   /* Numbers: keep single-line and aligned */
   .num, .cnt, .ratio {

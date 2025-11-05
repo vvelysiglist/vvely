@@ -77,3 +77,41 @@
     grid-template-columns: 38px minmax(120px,1fr) minmax(90px,0.9fr) minmax(76px,0.8fr) minmax(64px,0.8fr) 30px !important;
   }
 }
+/* === 모바일: 가로스크롤 없이 한 화면에 담기 (2줄 레이아웃) === */
+@media (max-width: 720px){
+  /* 한 행을 3열 그리드로: [순위] [닉네임(아이디)] [SOOP] */
+  .row{
+    display: grid !important;
+    grid-template-columns: 36px 1fr 28px !important;
+    grid-auto-rows: auto;
+    align-items: center;
+    gap: 4px 8px !important; /* (row-gap, col-gap) */
+    padding: 6px 8px !important;
+  }
+
+  /* 1줄차 배치 */
+  .row .rank  { grid-column: 1; grid-row: 1; text-align: center; }
+  .row .name  { grid-column: 2; grid-row: 1; min-width: 0 !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .soop  { grid-column: 3; grid-row: 1; justify-self: end; width: 26px !important; height: 26px !important; }
+  .row .soop img, .row .soop svg { width: 18px !important; height: 18px !important; display: block; }
+
+  /* 2줄차: 숫자 3개를 닉네임 밑(같은 셀: col 2 / row 2)에 가로로 나열 */
+  .row .num, .row .cnt, .row .ratio{
+    grid-column: 2; grid-row: 2;
+    display: inline-block; margin-right: 10px;
+    white-space: nowrap; font-variant-numeric: tabular-nums;
+    overflow: hidden; text-overflow: ellipsis;
+    font-size: 12px; opacity: .95;
+  }
+
+  /* 짧은 라벨(읽기 쉬움, 자리 차지 적음) */
+  .row .num::before   { content: "총 ";   opacity: .7; font-weight: 600; }
+  .row .cnt::before   { content: "횟수 "; opacity: .7; font-weight: 600; }
+  .row .ratio::before { content: "율 ";   opacity: .7; font-weight: 600; }
+
+  /* 초소형 화면 보정(≤360px): 여백 더 줄이기 */
+  @media (max-width: 360px){
+    .row{ gap: 2px 6px !important; padding: 4px 6px !important; }
+    .row .num, .row .cnt, .row .ratio{ margin-right: 8px; font-size: 11.5px; }
+  }
+}

@@ -31,10 +31,9 @@ function renderRows(rows,keys,expandOnIdx,colspan){ const tbody=document.querySe
 function applyView(){ document.getElementById("sessionTabs").classList.toggle("show", currentMainTab==="회차별목록"); if(currentMainTab==="누적후원랭킹") viewTotal(); else if(currentMainTab==="참여율랭킹") viewRate(); else viewSession(); }
 function init(){ buildMainTabs(); buildSessionTabs(); applyView(); }
 window.addEventListener("DOMContentLoaded", init);
-<!-- script.js 내부: SEARCH INJECT 블록 교체 -->
 // ====== [SEARCH INJECT START] 탭 아래 자동 검색창 + 필터 (닉네임/아이디 한정) ======
 (function(){
-  // 1) 검색 스타일 주입
+  // 1) 검색 스타일 주입 (다른 스타일과 충돌 없음: 고유 ID 사용)
   const STYLE_ID = 'search-style-autoinject';
   if (!document.getElementById(STYLE_ID)) {
     const css = `
@@ -62,7 +61,7 @@ window.addEventListener("DOMContentLoaded", init);
     document.head.appendChild(styleEl);
   }
 
-  // 2) DOM 준비: 세션 탭 아래 검색 UI 삽입
+  // 2) DOM 준비: 세션 탭 아래에 검색 UI 삽입 (없으면 본문 바로 아래)
   const sessionTabs = document.getElementById('sessionTabs');
   const anchor = sessionTabs || document.querySelector('#mainTabs') || document.body;
 
@@ -71,7 +70,7 @@ window.addEventListener("DOMContentLoaded", init);
     wrap.innerHTML = `
       <div class="searchbar" role="search" aria-label="랭킹 검색" style="margin-top:6px;margin-bottom:8px">
         <input id="searchInput" type="search"
-               placeholder="닉네임·아이디만 검색 (스페이스=AND) / ESC=초기화"
+               placeholder="닉네임 또는 아이디 입력"
                autocomplete="off" />
         <button class="clear" id="clearBtn" title="검색 지우기">지우기</button>
       </div>
@@ -84,9 +83,9 @@ window.addEventListener("DOMContentLoaded", init);
   const $input = document.getElementById('searchInput');
   const $clear = document.getElementById('clearBtn');
   const $info  = document.getElementById('searchInfo');
-  const $rowCount = document.getElementById('rowCount');
+  const $rowCount = document.getElementById('rowCount'); // 있으면 갱신
 
-  // ★ 표 요소를 '매번' 최신으로 다시 가져오게 변경
+  // ★ 표 요소를 '매번' 최신으로 다시 가져오게 (캐시 X → 타이밍/재렌더 안전)
   const getTableParts = () => {
     const table = document.querySelector('.card table');
     return {
@@ -96,7 +95,7 @@ window.addEventListener("DOMContentLoaded", init);
     };
   };
 
-  // 공통 유틸
+  // 유틸: 정규화
   const norm = (s)=> (s||'').toString()
     .normalize('NFKD')
     .replace(/\s+/g,' ')
@@ -110,7 +109,7 @@ window.addEventListener("DOMContentLoaded", init);
     $rowCount.textContent = String(visible);
   };
 
-  // 닉네임/아이디 컬럼 인덱스 찾기 (매 호출 시 최신 헤더 사용)
+  // 닉네임/아이디 컬럼 인덱스 찾기 (헤더가 바뀌어도 안전)
   const findColumnIndexes = ()=>{
     const {thead} = getTableParts();
     if (!thead || !thead.rows.length) return {idxNick:-1, idxId:-1};
@@ -128,18 +127,17 @@ window.addEventListener("DOMContentLoaded", init);
     return norm(parts.join(' '));
   };
 
-  // 메인 필터
+  // 메인 필터 (닉네임/아이디만 검색)
   const filter = () => {
     const {tbody} = getTableParts();
     if (!tbody) return;
     const q = norm($input.value);
     const terms = q.split(' ').filter(Boolean); // 공백 = AND
-
     const {idxNick, idxId} = findColumnIndexes();
 
     [...tbody.rows].forEach(tr=>{
       if (!terms.length) { tr.classList.remove('hidden'); return; }
-      const hay = buildHayFromRow(tr, idxNick, idxId); // 닉네임/아이디만
+      const hay = buildHayFromRow(tr, idxNick, idxId);
       const ok = terms.every(t=> hay.includes(t));
       tr.classList.toggle('hidden', !ok);
     });
@@ -151,6 +149,7 @@ window.addEventListener("DOMContentLoaded", init);
     updateCount();
   };
 
+  // ESC로 입력 초기화
   const onEscClear = (e) => {
     if (e.key === 'Escape') {
       $input.value = '';
@@ -158,7 +157,7 @@ window.addEventListener("DOMContentLoaded", init);
     }
   };
 
-  // 표 렌더 완료 대기 (렌더 전에도 참조 갱신되도록 테이블을 '그때그때' 가져오므로 간단)
+  // 표 렌더 완료 대기 (재렌더에도 안전)
   const waitUntilRows = () => new Promise(resolve=>{
     let tries=0;
     const t = setInterval(()=>{
@@ -169,7 +168,7 @@ window.addEventListener("DOMContentLoaded", init);
     }, 80);
   });
 
-  // 탭 전환 등으로 헤더/바디가 바뀔 수 있으므로 MutationObserver로 안전장치
+  // 표 변경 자동 감지 → 필터 재실행
   const observeTable = ()=>{
     const {table} = getTableParts();
     if (!table) return;
@@ -177,15 +176,14 @@ window.addEventListener("DOMContentLoaded", init);
     mo.observe(table, {childList:true, subtree:true, characterData:true});
   };
 
+  // 초기 바인딩
   waitUntilRows().then(()=>{
     updateCount();
     observeTable();
     $input.addEventListener('input', filter);
     $input.addEventListener('keydown', onEscClear);
     $clear.addEventListener('click', ()=>{ $input.value=''; $input.focus(); filter(); });
-    // 초기 1회 실행
-    filter();
+    filter(); // 최초 1회
   });
 })();
 // ====== [SEARCH INJECT END] ======
-

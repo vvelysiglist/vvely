@@ -71,7 +71,7 @@ window.addEventListener("DOMContentLoaded", init);
     wrap.innerHTML = `
       <div class="searchbar" role="search" aria-label="랭킹 검색" style="margin-top:6px;margin-bottom:8px">
         <input id="searchInput" type="search"
-               placeholder="닉네임 또는 아이디를 입력하세요"
+               placeholder="닉네임, 아이디, 숫자(후원/참여) 검색 (스페이스=AND) / ESC=초기화"
                autocomplete="off" />
         <button class="clear" id="clearBtn" title="검색 지우기">지우기</button>
       </div>
@@ -147,3 +147,4 @@ window.addEventListener("DOMContentLoaded", init);
   });
 })();
 // ====== [SEARCH INJECT END] ======
+

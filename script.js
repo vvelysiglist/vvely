@@ -31,3 +31,119 @@ function renderRows(rows,keys,expandOnIdx,colspan){ const tbody=document.querySe
 function applyView(){ document.getElementById("sessionTabs").classList.toggle("show", currentMainTab==="회차별목록"); if(currentMainTab==="누적후원랭킹") viewTotal(); else if(currentMainTab==="참여율랭킹") viewRate(); else viewSession(); }
 function init(){ buildMainTabs(); buildSessionTabs(); applyView(); }
 window.addEventListener("DOMContentLoaded", init);
+// ====== [SEARCH INJECT START] 탭 아래 자동 검색창 + 필터 ======
+(function(){
+  // 1) 검색 스타일을 동적으로 주입 (style.css 수정 불필요)
+  const STYLE_ID = 'search-style-autoinject';
+  if (!document.getElementById(STYLE_ID)) {
+    const css = `
+      .searchbar{
+        display:flex;align-items:center;gap:8px;
+        background:#fff;border:1px solid var(--border);
+        border-radius:12px;padding:8px 10px;
+        box-shadow:0 4px 10px rgba(255,133,192,.10)
+      }
+      .searchbar input{
+        flex:1;border:0;outline:none;font-size:13px;
+        background:transparent;color:var(--text)
+      }
+      .searchbar .clear{
+        border:0;background:#fff;border:1px solid var(--border);
+        border-radius:999px;padding:5px 9px;
+        font-weight:700;font-size:11px;color:var(--muted);cursor:pointer
+      }
+      .search-info{font-size:11px;color:var(--muted)}
+      .hidden{display:none !important}
+    `;
+    const styleEl = document.createElement('style');
+    styleEl.id = STYLE_ID;
+    styleEl.appendChild(document.createTextNode(css));
+    document.head.appendChild(styleEl);
+  }
+
+  // 2) DOM 준비: 세션 탭(#sessionTabs) 바로 아래에 검색 UI 삽입
+  const sessionTabs = document.getElementById('sessionTabs');
+  const anchor = sessionTabs || document.querySelector('#mainTabs') || document.body;
+
+  // 이미 한번 만들어졌다면 중복 생성 방지
+  if (!document.getElementById('searchInput')) {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `
+      <div class="searchbar" role="search" aria-label="랭킹 검색" style="margin-top:6px;margin-bottom:8px">
+        <input id="searchInput" type="search"
+               placeholder="닉네임, 아이디, 숫자(후원/참여) 검색 (스페이스=AND) / ESC=초기화"
+               autocomplete="off" />
+        <button class="clear" id="clearBtn" title="검색 지우기">지우기</button>
+      </div>
+      <div class="search-info" id="searchInfo" style="margin:6px 2px 10px">전체 항목 표시 중</div>
+    `;
+    // sessionTabs 바로 '뒤'에 삽입
+    anchor.insertAdjacentElement('afterend', wrap);
+  }
+
+  // 3) 필터 로직
+  const $input = document.getElementById('searchInput');
+  const $clear = document.getElementById('clearBtn');
+  const $info  = document.getElementById('searchInfo');
+  const $rowCount = document.getElementById('rowCount');
+
+  // 현재 페이지의 테이블 tbody (index.html 구조 기반)
+  // <div class="card table-wrap"><table><thead>..<tbody>..  (:contentReference[oaicite:3]{index=3})
+  const $tbody = document.querySelector('.card table tbody');
+
+  // 표 렌더 완료 대기 (script.js가 DATA로 채운 뒤 필터 시작)
+  const waitUntilRows = () => new Promise(resolve=>{
+    let tries=0; const t = setInterval(()=>{
+      tries++;
+      if ($tbody && $tbody.rows.length) { clearInterval(t); resolve(); }
+      if (tries > 100) { clearInterval(t); resolve(); } // failsafe
+    }, 80);
+  });
+
+  const norm = (s)=> (s||'')
+    .toString()
+    .normalize('NFKD')
+    .replace(/\s+/g,' ')
+    .toLowerCase()
+    .trim();
+
+  const updateCount = ()=> {
+    if (!$rowCount || !$tbody) return;
+    const visible = [...$tbody.rows].filter(r=>!r.classList.contains('hidden')).length;
+    $rowCount.textContent = String(visible);
+  };
+
+  const filter = () => {
+    if (!$tbody) return;
+    const q = norm($input.value);
+    const terms = q.split(' ').filter(Boolean); // 공백 = AND
+
+    [...$tbody.rows].forEach(tr=>{
+      if (!terms.length) { tr.classList.remove('hidden'); return; }
+      const hay = norm(tr.textContent); // 닉네임/아이디/숫자/순위 모두 포함
+      const ok = terms.every(t=> hay.includes(t));
+      tr.classList.toggle('hidden', !ok);
+    });
+
+    $info.textContent = terms.length
+      ? `"${$input.value}" 로 필터링됨 (스페이스 = AND)`
+      : '전체 항목 표시 중';
+
+    updateCount();
+  };
+
+  const onEscClear = (e) => {
+    if (e.key === 'Escape') {
+      $input.value = '';
+      filter();
+    }
+  };
+
+  waitUntilRows().then(()=>{
+    updateCount();                  // 최초 카운트
+    $input.addEventListener('input', filter);
+    $input.addEventListener('keydown', onEscClear);
+    $clear.addEventListener('click', ()=>{ $input.value=''; $input.focus(); filter(); });
+  });
+})();
+// ====== [SEARCH INJECT END] ======

@@ -31,6 +31,7 @@ function renderRows(rows,keys,expandOnIdx,colspan){ const tbody=document.querySe
 function applyView(){ document.getElementById("sessionTabs").classList.toggle("show", currentMainTab==="회차별목록"); if(currentMainTab==="누적후원랭킹") viewTotal(); else if(currentMainTab==="참여율랭킹") viewRate(); else viewSession(); }
 function init(){ buildMainTabs(); buildSessionTabs(); applyView(); }
 window.addEventListener("DOMContentLoaded", init);
+<!-- script.js 내부: SEARCH INJECT 블록 교체 -->
 // ====== [SEARCH INJECT START] 탭 아래 자동 검색창 + 필터 (닉네임/아이디 한정) ======
 (function(){
   // 1) 검색 스타일 주입
@@ -41,16 +42,16 @@ window.addEventListener("DOMContentLoaded", init);
         display:flex;align-items:center;gap:8px;
         background:#fff;border:1px solid var(--border);
         border-radius:12px;padding:8px 10px;
-        box-shadow:0 4px 10px rgba(255,133,192,.10)
+        box-shadow:0 4px 10px rgba(255,133,192,.10);
       }
       .searchbar input{
         flex:1;border:0;outline:none;font-size:13px;
-        background:transparent;color:var(--text)
+        background:transparent;color:var(--text);
       }
       .searchbar .clear{
         border:0;background:#fff;border:1px solid var(--border);
         border-radius:999px;padding:5px 9px;
-        font-weight:700;font-size:11px;color:var(--muted);cursor:pointer
+        font-weight:700;font-size:11px;color:var(--muted);cursor:pointer;
       }
       .search-info{font-size:11px;color:var(--muted)}
       .hidden{display:none !important}
@@ -79,51 +80,47 @@ window.addEventListener("DOMContentLoaded", init);
     anchor.insertAdjacentElement('afterend', wrap);
   }
 
-  // 3) 요소 캐시
+  // 3) 요소 핸들
   const $input = document.getElementById('searchInput');
   const $clear = document.getElementById('clearBtn');
   const $info  = document.getElementById('searchInfo');
   const $rowCount = document.getElementById('rowCount');
-  const $table = document.querySelector('.card table');
-  const $thead = $table ? $table.tHead : null;
-  const $tbody = $table ? $table.tBodies[0] : null;
 
-  // 4) 표 렌더 완료 대기
-  const waitUntilRows = () => new Promise(resolve=>{
-    let tries=0; const t = setInterval(()=>{
-      tries++;
-      if ($tbody && $tbody.rows.length) { clearInterval(t); resolve(); }
-      if (tries > 100) { clearInterval(t); resolve(); } // failsafe
-    }, 80);
-  });
+  // ★ 표 요소를 '매번' 최신으로 다시 가져오게 변경
+  const getTableParts = () => {
+    const table = document.querySelector('.card table');
+    return {
+      table,
+      thead: table ? table.tHead : null,
+      tbody: table ? table.tBodies[0] : null,
+    };
+  };
 
-  const norm = (s)=> (s||'')
-    .toString()
+  // 공통 유틸
+  const norm = (s)=> (s||'').toString()
     .normalize('NFKD')
     .replace(/\s+/g,' ')
     .toLowerCase()
     .trim();
 
   const updateCount = ()=> {
-    if (!$rowCount || !$tbody) return;
-    const visible = [...$tbody.rows].filter(r=>!r.classList.contains('hidden')).length;
+    const {tbody} = getTableParts();
+    if (!$rowCount || !tbody) return;
+    const visible = [...tbody.rows].filter(r=>!r.classList.contains('hidden')).length;
     $rowCount.textContent = String(visible);
   };
 
-  // 5) 헤더에서 닉네임/아이디 컬럼 인덱스 찾기 (유연 매칭)
-  let idxNick = -1, idxId = -1;
+  // 닉네임/아이디 컬럼 인덱스 찾기 (매 호출 시 최신 헤더 사용)
   const findColumnIndexes = ()=>{
-    if (!$thead) return;
-    const ths = [...$thead.rows[0].cells].map((th,i)=>({i, text: norm(th.textContent)}));
-    // “닉네임(최근)” 포함 등 유연하게 처리
-    const nick = ths.find(th => th.text.includes('닉네임'));
+    const {thead} = getTableParts();
+    if (!thead || !thead.rows.length) return {idxNick:-1, idxId:-1};
+    const ths = [...thead.rows[0].cells].map((th,i)=>({i, text: norm(th.textContent)}));
+    const nick = ths.find(th => th.text.includes('닉네임')); // “닉네임(최근)” 대응
     const id   = ths.find(th => th.text.includes('아이디'));
-    idxNick = nick ? nick.i : -1;
-    idxId   = id   ? id.i   : -1;
+    return { idxNick: nick ? nick.i : -1, idxId: id ? id.i : -1 };
   };
 
-  const buildHayFromRow = (tr)=>{
-    // 닉네임/아이디만 합쳐서 검색 대상으로 사용
+  const buildHayFromRow = (tr, idxNick, idxId)=>{
     const cells = tr.cells;
     const parts = [];
     if (idxNick >= 0 && cells[idxNick]) parts.push(cells[idxNick].textContent);
@@ -131,17 +128,18 @@ window.addEventListener("DOMContentLoaded", init);
     return norm(parts.join(' '));
   };
 
+  // 메인 필터
   const filter = () => {
-    if (!$tbody) return;
+    const {tbody} = getTableParts();
+    if (!tbody) return;
     const q = norm($input.value);
     const terms = q.split(' ').filter(Boolean); // 공백 = AND
 
-    // 컬럼 인덱스가 아직이면 재탐색
-    if (idxNick === -1 && idxId === -1) findColumnIndexes();
+    const {idxNick, idxId} = findColumnIndexes();
 
-    [...$tbody.rows].forEach(tr=>{
+    [...tbody.rows].forEach(tr=>{
       if (!terms.length) { tr.classList.remove('hidden'); return; }
-      const hay = buildHayFromRow(tr); // ★ 닉네임/아이디만
+      const hay = buildHayFromRow(tr, idxNick, idxId); // 닉네임/아이디만
       const ok = terms.every(t=> hay.includes(t));
       tr.classList.toggle('hidden', !ok);
     });
@@ -160,13 +158,33 @@ window.addEventListener("DOMContentLoaded", init);
     }
   };
 
+  // 표 렌더 완료 대기 (렌더 전에도 참조 갱신되도록 테이블을 '그때그때' 가져오므로 간단)
+  const waitUntilRows = () => new Promise(resolve=>{
+    let tries=0;
+    const t = setInterval(()=>{
+      const {tbody} = getTableParts();
+      tries++;
+      if (tbody && tbody.rows.length) { clearInterval(t); resolve(); }
+      if (tries > 100) { clearInterval(t); resolve(); } // failsafe
+    }, 80);
+  });
+
+  // 탭 전환 등으로 헤더/바디가 바뀔 수 있으므로 MutationObserver로 안전장치
+  const observeTable = ()=>{
+    const {table} = getTableParts();
+    if (!table) return;
+    const mo = new MutationObserver(()=>{ filter(); });
+    mo.observe(table, {childList:true, subtree:true, characterData:true});
+  };
+
   waitUntilRows().then(()=>{
-    // 헤더 인덱스 먼저 추출
-    findColumnIndexes();
     updateCount();
+    observeTable();
     $input.addEventListener('input', filter);
     $input.addEventListener('keydown', onEscClear);
     $clear.addEventListener('click', ()=>{ $input.value=''; $input.focus(); filter(); });
+    // 초기 1회 실행
+    filter();
   });
 })();
 // ====== [SEARCH INJECT END] ======

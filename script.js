@@ -31,9 +31,9 @@ function renderRows(rows,keys,expandOnIdx,colspan){ const tbody=document.querySe
 function applyView(){ document.getElementById("sessionTabs").classList.toggle("show", currentMainTab==="회차별목록"); if(currentMainTab==="누적후원랭킹") viewTotal(); else if(currentMainTab==="참여율랭킹") viewRate(); else viewSession(); }
 function init(){ buildMainTabs(); buildSessionTabs(); applyView(); }
 window.addEventListener("DOMContentLoaded", init);
-// ====== [SEARCH INJECT START] 탭 아래 자동 검색창 + 필터 ======
+// ====== [SEARCH INJECT START] 탭 아래 자동 검색창 + 필터 (닉네임/아이디 한정) ======
 (function(){
-  // 1) 검색 스타일을 동적으로 주입 (style.css 수정 불필요)
+  // 1) 검색 스타일 주입
   const STYLE_ID = 'search-style-autoinject';
   if (!document.getElementById(STYLE_ID)) {
     const css = `
@@ -61,37 +61,34 @@ window.addEventListener("DOMContentLoaded", init);
     document.head.appendChild(styleEl);
   }
 
-  // 2) DOM 준비: 세션 탭(#sessionTabs) 바로 아래에 검색 UI 삽입
+  // 2) DOM 준비: 세션 탭 아래 검색 UI 삽입
   const sessionTabs = document.getElementById('sessionTabs');
   const anchor = sessionTabs || document.querySelector('#mainTabs') || document.body;
 
-  // 이미 한번 만들어졌다면 중복 생성 방지
   if (!document.getElementById('searchInput')) {
     const wrap = document.createElement('div');
     wrap.innerHTML = `
       <div class="searchbar" role="search" aria-label="랭킹 검색" style="margin-top:6px;margin-bottom:8px">
         <input id="searchInput" type="search"
-               placeholder="닉네임, 아이디, 숫자(후원/참여) 검색 (스페이스=AND) / ESC=초기화"
+               placeholder="닉네임·아이디만 검색 (스페이스=AND) / ESC=초기화"
                autocomplete="off" />
         <button class="clear" id="clearBtn" title="검색 지우기">지우기</button>
       </div>
-      <div class="search-info" id="searchInfo" style="margin:6px 2px 10px">전체 항목 표시 중</div>
+      <div class="search-info" id="searchInfo" style="margin:6px 2px 10px">전체 항목 표시 중 (닉네임/아이디만 대상)</div>
     `;
-    // sessionTabs 바로 '뒤'에 삽입
     anchor.insertAdjacentElement('afterend', wrap);
   }
 
-  // 3) 필터 로직
+  // 3) 요소 캐시
   const $input = document.getElementById('searchInput');
   const $clear = document.getElementById('clearBtn');
   const $info  = document.getElementById('searchInfo');
   const $rowCount = document.getElementById('rowCount');
+  const $table = document.querySelector('.card table');
+  const $thead = $table ? $table.tHead : null;
+  const $tbody = $table ? $table.tBodies[0] : null;
 
-  // 현재 페이지의 테이블 tbody (index.html 구조 기반)
-  // <div class="card table-wrap"><table><thead>..<tbody>..  (:contentReference[oaicite:3]{index=3})
-  const $tbody = document.querySelector('.card table tbody');
-
-  // 표 렌더 완료 대기 (script.js가 DATA로 채운 뒤 필터 시작)
+  // 4) 표 렌더 완료 대기
   const waitUntilRows = () => new Promise(resolve=>{
     let tries=0; const t = setInterval(()=>{
       tries++;
@@ -113,21 +110,45 @@ window.addEventListener("DOMContentLoaded", init);
     $rowCount.textContent = String(visible);
   };
 
+  // 5) 헤더에서 닉네임/아이디 컬럼 인덱스 찾기 (유연 매칭)
+  let idxNick = -1, idxId = -1;
+  const findColumnIndexes = ()=>{
+    if (!$thead) return;
+    const ths = [...$thead.rows[0].cells].map((th,i)=>({i, text: norm(th.textContent)}));
+    // “닉네임(최근)” 포함 등 유연하게 처리
+    const nick = ths.find(th => th.text.includes('닉네임'));
+    const id   = ths.find(th => th.text.includes('아이디'));
+    idxNick = nick ? nick.i : -1;
+    idxId   = id   ? id.i   : -1;
+  };
+
+  const buildHayFromRow = (tr)=>{
+    // 닉네임/아이디만 합쳐서 검색 대상으로 사용
+    const cells = tr.cells;
+    const parts = [];
+    if (idxNick >= 0 && cells[idxNick]) parts.push(cells[idxNick].textContent);
+    if (idxId   >= 0 && cells[idxId])   parts.push(cells[idxId].textContent);
+    return norm(parts.join(' '));
+  };
+
   const filter = () => {
     if (!$tbody) return;
     const q = norm($input.value);
     const terms = q.split(' ').filter(Boolean); // 공백 = AND
 
+    // 컬럼 인덱스가 아직이면 재탐색
+    if (idxNick === -1 && idxId === -1) findColumnIndexes();
+
     [...$tbody.rows].forEach(tr=>{
       if (!terms.length) { tr.classList.remove('hidden'); return; }
-      const hay = norm(tr.textContent); // 닉네임/아이디/숫자/순위 모두 포함
+      const hay = buildHayFromRow(tr); // ★ 닉네임/아이디만
       const ok = terms.every(t=> hay.includes(t));
       tr.classList.toggle('hidden', !ok);
     });
 
     $info.textContent = terms.length
-      ? `"${$input.value}" 로 필터링됨 (스페이스 = AND)`
-      : '전체 항목 표시 중';
+      ? `"${$input.value}" (닉네임/아이디)로 필터링됨 (스페이스 = AND)`
+      : '전체 항목 표시 중 (닉네임/아이디만 대상)';
 
     updateCount();
   };
@@ -140,7 +161,9 @@ window.addEventListener("DOMContentLoaded", init);
   };
 
   waitUntilRows().then(()=>{
-    updateCount();                  // 최초 카운트
+    // 헤더 인덱스 먼저 추출
+    findColumnIndexes();
+    updateCount();
     $input.addEventListener('input', filter);
     $input.addEventListener('keydown', onEscClear);
     $clear.addEventListener('click', ()=>{ $input.value=''; $input.focus(); filter(); });

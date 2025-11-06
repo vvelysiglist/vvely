@@ -61,42 +61,44 @@ window.addEventListener("DOMContentLoaded", init);
     document.head.appendChild(styleEl);
   }
 
-  // 2) DOM 준비: 세션 탭(#sessionTabs) 바로 아래에 검색 UI 삽입
+  // 2) DOM 준비
   const sessionTabs = document.getElementById('sessionTabs');
   const anchor = sessionTabs || document.querySelector('#mainTabs') || document.body;
 
-  // 이미 한번 만들어졌다면 중복 생성 방지
+  // UI 중복 생성 방지
   if (!document.getElementById('searchInput')) {
     const wrap = document.createElement('div');
     wrap.innerHTML = `
       <div class="searchbar" role="search" aria-label="랭킹 검색" style="margin-top:6px;margin-bottom:8px">
         <input id="searchInput" type="search"
-               placeholder="닉네임, 아이디, 숫자(후원/참여) 검색 (스페이스=AND) / ESC=초기화"
+               placeholder="닉네임 또는 아이디 입력하세요"
                autocomplete="off" />
         <button class="clear" id="clearBtn" title="검색 지우기">지우기</button>
       </div>
       <div class="search-info" id="searchInfo" style="margin:6px 2px 10px">전체 항목 표시 중</div>
     `;
-    // sessionTabs 바로 '뒤'에 삽입
     anchor.insertAdjacentElement('afterend', wrap);
   }
 
-  // 3) 필터 로직
   const $input = document.getElementById('searchInput');
   const $clear = document.getElementById('clearBtn');
   const $info  = document.getElementById('searchInfo');
   const $rowCount = document.getElementById('rowCount');
 
-  // 현재 페이지의 테이블 tbody (index.html 구조 기반)
-  // <div class="card table-wrap"><table><thead>..<tbody>..  (:contentReference[oaicite:3]{index=3})
   const $tbody = document.querySelector('.card table tbody');
+  const $thead = document.querySelector('.card table thead');
 
-  // 표 렌더 완료 대기 (script.js가 DATA로 채운 뒤 필터 시작)
+  // ✅ [NEW] 헤더에서 닉네임/아이디 열 인덱스 자동 찾기
+  const THS = $thead ? [...$thead.querySelectorAll('th')].map(th => th.textContent.trim()) : [];
+  const IDX_NICK = THS.findIndex(t => t.includes('닉네임'));
+  const IDX_ID   = THS.findIndex(t => t.includes('아이디'));
+
+  // 표 로딩 대기
   const waitUntilRows = () => new Promise(resolve=>{
     let tries=0; const t = setInterval(()=>{
       tries++;
       if ($tbody && $tbody.rows.length) { clearInterval(t); resolve(); }
-      if (tries > 100) { clearInterval(t); resolve(); } // failsafe
+      if (tries > 100) { clearInterval(t); resolve(); }
     }, 80);
   });
 
@@ -113,25 +115,32 @@ window.addEventListener("DOMContentLoaded", init);
     $rowCount.textContent = String(visible);
   };
 
+  // ✅ 필터 함수 — “닉네임 + 아이디”만 검색
   const filter = () => {
     if (!$tbody) return;
     const q = norm($input.value);
-    const terms = q.split(' ').filter(Boolean); // 공백 = AND
+    const terms = q.split(' ').filter(Boolean);
 
     [...$tbody.rows].forEach(tr=>{
       if (!terms.length) { tr.classList.remove('hidden'); return; }
-      const hay = norm(tr.textContent); // 닉네임/아이디/숫자/순위 모두 포함
+
+      const nick = IDX_NICK >= 0 ? norm(tr.cells[IDX_NICK]?.textContent || "") : "";
+      const uid  = IDX_ID   >= 0 ? norm(tr.cells[IDX_ID]?.textContent   || "") : "";
+
+      const hay = `${nick} ${uid}`; // ✅ 검색대상 축소 완료
+
       const ok = terms.every(t=> hay.includes(t));
       tr.classList.toggle('hidden', !ok);
     });
 
     $info.textContent = terms.length
-      ? `"${$input.value}" 로 필터링됨 (스페이스 = AND)`
+      ? `"${$input.value}" 로 필터링됨 (닉네임/아이디만 검색)`
       : '전체 항목 표시 중';
 
     updateCount();
   };
 
+  // ESC 초기화
   const onEscClear = (e) => {
     if (e.key === 'Escape') {
       $input.value = '';
@@ -140,7 +149,7 @@ window.addEventListener("DOMContentLoaded", init);
   };
 
   waitUntilRows().then(()=>{
-    updateCount();                  // 최초 카운트
+    updateCount();
     $input.addEventListener('input', filter);
     $input.addEventListener('keydown', onEscClear);
     $clear.addEventListener('click', ()=>{ $input.value=''; $input.focus(); filter(); });
